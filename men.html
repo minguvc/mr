@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멘헤라 앱 - 불안 기록</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-pink: #FF1493;
+            --primary-purple: #9945FF;
+            --dark-bg: #0a0015;
+            --glass-bg: rgba(153, 69, 255, 0.1);
+            --border-glow: rgba(255, 20, 147, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #d1b3ff;
+            --accent-cyan: #00ffff;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Outfit', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 20, 147, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(153, 69, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(0, 255, 255, 0.1) 0%, transparent 40%);
+            z-index: -1;
+            animation: bgPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Grain overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+            animation: grain 8s steps(10) infinite;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -10%); }
+            20% { transform: translate(-15%, 5%); }
+            30% { transform: translate(7%, -25%); }
+            40% { transform: translate(-5%, 25%); }
+            50% { transform: translate(-15%, 10%); }
+            60% { transform: translate(15%, 0%); }
+            70% { transform: translate(0%, 15%); }
+            80% { transform: translate(3%, 35%); }
+            90% { transform: translate(-10%, 10%); }
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Onboarding screen */
+        #onboarding {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translateX(0); }
+            92% { transform: translateX(-2px); }
+            94% { transform: translateX(2px); }
+            96% { transform: translateX(-2px); }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: var(--primary-pink);
+            font-weight: 600;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--glass-bg);
+            border: 2px solid var(--border-glow);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.3);
+            transform: scale(1.02);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn {
+            padding: 1.2rem 3rem;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-purple));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(255, 20, 147, 0.6);
+        }
+
+        .btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Main app screen */
+        #app-screen {
+            display: none;
+            padding-top: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .app-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        /* Bottle container */
+        .bottle-section {
+            margin: 3rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bottle-container {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        .bottle {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                rgba(153, 255, 153, 0.15) 0%, 
+                rgba(153, 255, 153, 0.25) 100%);
+            border: 3px solid rgba(153, 255, 153, 0.4);
+            border-radius: 10px 10px 30px 30px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            box-shadow: 
+                0 0 20px rgba(153, 255, 153, 0.2),
+                inset 0 0 20px rgba(153, 255, 153, 0.1);
+        }
+
+        .bottle::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(180deg, 
+                rgba(153, 255, 153, 0.3) 0%, 
+                rgba(153, 255, 153, 0.15) 100%);
+            border: 3px solid rgba(153, 255, 153, 0.4);
+            border-radius: 10px 10px 0 0;
+            border-bottom: none;
+        }
+
+        .bottle-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0%;
+            background: linear-gradient(180deg, 
+                rgba(255, 20, 147, 0.3) 0%, 
+                rgba(153, 69, 255, 0.5) 100%);
+            transition: height 0.5s ease;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-end;
+            padding: 10px;
+            gap: 5px;
+        }
+
+        .icon-item {
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            animation: iconPop 0.3s ease-out;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+        }
+
+        @keyframes iconPop {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.3) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .counter-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        /* Button grid */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .emotion-btn {
+            aspect-ratio: 1;
+            background: var(--glass-bg);
+            border: 2px solid var(--border-glow);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .emotion-btn:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-pink);
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
+        }
+
+        .emotion-btn:active {
+            transform: scale(0.95);
+        }
+
+        .emotion-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        .emotion-text {
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 0 10px;
+            line-height: 1.3;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .click-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 20, 147, 0.8);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* Overflow animation */
+        .overflow-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .vortex {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: vortexSpin 3s ease-in-out;
+        }
+
+        @keyframes vortexSpin {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .vortex-icon {
+            position: absolute;
+            font-size: 40px;
+            animation: vortexFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes vortexFloat {
+            0%, 100% { 
+                transform: translateY(0) scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: translateY(-20px) scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .reset-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: 900;
+            text-align: center;
+            color: var(--primary-pink);
+            opacity: 0;
+            animation: messageAppear 1s ease-out 2.5s forwards;
+            z-index: 10;
+        }
+
+        @keyframes messageAppear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Shaking bottle animation */
+        @keyframes bottleShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10% { transform: translateX(-5px) rotate(-2deg); }
+            20% { transform: translateX(5px) rotate(2deg); }
+            30% { transform: translateX(-5px) rotate(-2deg); }
+            40% { transform: translateX(5px) rotate(2deg); }
+            50% { transform: translateX(-5px) rotate(-2deg); }
+            60% { transform: translateX(5px) rotate(2deg); }
+            70% { transform: translateX(-5px) rotate(-2deg); }
+            80% { transform: translateX(5px) rotate(2deg); }
+            90% { transform: translateX(-5px) rotate(-2deg); }
+        }
+
+        .bottle.shaking {
+            animation: bottleShake 0.5s ease-in-out;
+        }
+
+        .bottle.breaking {
+            animation: bottleBreak 0.5s ease-out forwards;
+        }
+
+        @keyframes bottleBreak {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.2); opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .button-grid {
+                gap: 1rem;
+            }
+            
+            .emotion-icon {
+                font-size: 2.5rem;
+            }
+            
+            .bottle-container {
+                width: 160px;
+                height: 240px;
+            }
+        }
+
+        /* Click feedback */
+        .click-feedback {
+            position: fixed;
+            pointer-events: none;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary-pink);
+            animation: feedbackPop 0.6s ease-out forwards;
+            z-index: 9998;
+            text-shadow: 0 0 10px rgba(255, 20, 147, 0.8);
+        }
+
+        @keyframes feedbackPop {
+            0% {
+                transform: scale(0) translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) translateY(-20px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8) translateY(-50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Onboarding Screen -->
+    <div id="onboarding">
+        <div class="container">
+            <div class="logo">MENHERA</div>
+            <div class="subtitle">불안 기록 앱</div>
+            
+            <div class="input-group">
+                <label class="input-label">불안 요소 1</label>
+                <input type="text" id="anxiety1" placeholder="나를 더이상 사랑하지 않는거야?" maxlength="20">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">불안 요소 2</label>
+                <input type="text" id="anxiety2" placeholder="어디야? 어디냐고" maxlength="20">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">불안 요소 3</label>
+                <input type="text" id="anxiety3" placeholder="왜 날 버리려 해" maxlength="20">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">불안 요소 4</label>
+                <input type="text" id="anxiety4" placeholder="내가 부족해서 그런거지?" maxlength="20">
+            </div>
+            
+            <button class="btn" onclick="startApp()">
+                <span>시작하기</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen">
+        <div class="container">
+            <div class="header">
+                <div class="app-title">불안 측정 중...</div>
+            </div>
+
+            <div class="bottle-section">
+                <div class="bottle-container">
+                    <div class="bottle" id="bottle">
+                        <div class="bottle-fill" id="bottleFill"></div>
+                    </div>
+                </div>
+                <div class="counter-display">
+                    총 <span id="totalCount">0</span>회 클릭
+                </div>
+            </div>
+
+            <div class="button-grid" id="buttonGrid">
+                <!-- Buttons will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Overflow Screen -->
+    <div class="overflow-screen" id="overflowScreen">
+        <div class="vortex" id="vortex"></div>
+        <div class="reset-message">다시 시작합니다...</div>
+    </div>
+
+    <!-- Audio for click sound -->
+    <audio id="clickSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==" type="audio/wav">
+    </audio>
+
+    <script>
+        const emotionData = [
+            { icon: '💗', defaultText: '나를 더이상 사랑하지 않는거야?', decayIcon: '💔' },
+            { icon: '😢', defaultText: '어디야? 어디냐고', decayIcon: '😭' },
+            { icon: '💬', defaultText: '왜 날 버리려 해', decayIcon: '💀' },
+            { icon: '🥺', defaultText: '내가 부족해서 그런거지?', decayIcon: '😵' }
+        ];
+
+        let counts = [0, 0, 0, 0];
+        let totalCount = 0;
+        let icons = [];
+
+        function startApp() {
+            // Get custom anxiety texts
+            const customTexts = [
+                document.getElementById('anxiety1').value || emotionData[0].defaultText,
+                document.getElementById('anxiety2').value || emotionData[1].defaultText,
+                document.getElementById('anxiety3').value || emotionData[2].defaultText,
+                document.getElementById('anxiety4').value || emotionData[3].defaultText
+            ];
+
+            // Update emotion data with custom texts
+            emotionData.forEach((emotion, i) => {
+                emotion.text = customTexts[i];
+            });
+
+            // Generate buttons
+            const buttonGrid = document.getElementById('buttonGrid');
+            buttonGrid.innerHTML = '';
+            
+            emotionData.forEach((emotion, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'emotion-btn';
+                btn.innerHTML = `
+                    <div class="emotion-icon">${emotion.icon}</div>
+                    <div class="emotion-text">${emotion.text}</div>
+                    <div class="click-count" id="count-${index}">0</div>
+                `;
+                btn.onclick = () => clickButton(index);
+                buttonGrid.appendChild(btn);
+            });
+
+            // Hide onboarding, show app
+            document.getElementById('onboarding').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+        }
+
+        function clickButton(index) {
+            // Play click sound
+            const clickSound = document.getElementById('clickSound');
+            clickSound.currentTime = 0;
+            clickSound.play().catch(() => {}); // Ignore if autoplay is blocked
+
+            // Increment count
+            counts[index]++;
+            totalCount++;
+
+            // Update displays
+            document.getElementById(`count-${index}`).textContent = counts[index];
+            document.getElementById('totalCount').textContent = totalCount;
+
+            // Show click feedback
+            showClickFeedback(event);
+
+            // Every 10 clicks, add a decay icon
+            if (counts[index] % 10 === 0) {
+                addDecayIcon(index);
+                shakeBottle();
+            }
+
+            // Check if bottle is full (40 icons = 400 total clicks)
+            if (icons.length >= 40) {
+                triggerOverflow();
+            }
+        }
+
+        function showClickFeedback(e) {
+            const feedback = document.createElement('div');
+            feedback.className = 'click-feedback';
+            feedback.textContent = '딸깍!';
+            feedback.style.left = e.clientX + 'px';
+            feedback.style.top = e.clientY + 'px';
+            document.body.appendChild(feedback);
+
+            setTimeout(() => {
+                feedback.remove();
+            }, 600);
+        }
+
+        function addDecayIcon(emotionIndex) {
+            const icon = emotionData[emotionIndex].decayIcon;
+            icons.push(icon);
+
+            const bottleFill = document.getElementById('bottleFill');
+            const iconElement = document.createElement('div');
+            iconElement.className = 'icon-item';
+            iconElement.textContent = icon;
+            bottleFill.appendChild(iconElement);
+
+            // Update bottle fill height
+            const fillPercentage = Math.min((icons.length / 40) * 100, 100);
+            bottleFill.style.height = fillPercentage + '%';
+        }
+
+        function shakeBottle() {
+            const bottle = document.getElementById('bottle');
+            bottle.classList.add('shaking');
+            setTimeout(() => {
+                bottle.classList.remove('shaking');
+            }, 500);
+        }
+
+        function triggerOverflow() {
+            const bottle = document.getElementById('bottle');
+            const overflowScreen = document.getElementById('overflowScreen');
+            const vortex = document.getElementById('vortex');
+
+            // Break bottle animation
+            bottle.classList.add('breaking');
+
+            // Show overflow screen
+            setTimeout(() => {
+                overflowScreen.style.display = 'block';
+
+                // Create vortex with all icons
+                vortex.innerHTML = '';
+                icons.forEach((icon, index) => {
+                    const iconEl = document.createElement('div');
+                    iconEl.className = 'vortex-icon';
+                    iconEl.textContent = icon;
+                    
+                    // Random position in circle
+                    const angle = (index / icons.length) * Math.PI * 2;
+                    const radius = 150;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    
+                    iconEl.style.left = `calc(50% + ${x}px)`;
+                    iconEl.style.top = `calc(50% + ${y}px)`;
+                    iconEl.style.animationDelay = `${index * 0.05}s`;
+                    
+                    vortex.appendChild(iconEl);
+                });
+
+                // Reset after animation
+                setTimeout(() => {
+                    resetApp();
+                }, 3500);
+            }, 500);
+        }
+
+        function resetApp() {
+            // Hide overflow screen
+            document.getElementById('overflowScreen').style.display = 'none';
+
+            // Reset all counts and icons
+            counts = [0, 0, 0, 0];
+            totalCount = 0;
+            icons = [];
+
+            // Update displays
+            document.getElementById('totalCount').textContent = '0';
+            counts.forEach((_, i) => {
+                document.getElementById(`count-${i}`).textContent = '0';
+            });
+
+            // Clear bottle
+            const bottleFill = document.getElementById('bottleFill');
+            bottleFill.innerHTML = '';
+            bottleFill.style.height = '0%';
+
+            // Remove breaking class
+            const bottle = document.getElementById('bottle');
+            bottle.classList.remove('breaking');
+        }
+    </script>
+</body>
+</html>
